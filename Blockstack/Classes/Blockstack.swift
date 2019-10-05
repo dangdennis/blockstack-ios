@@ -35,7 +35,7 @@ public enum BlockstackConstants {
 /**
  A class that contains the native swift implementations of Blockstack.js methods and Blockstack network operations.
  */
-@objc open class Blockstack: NSObject {
+@objc open class Blockstack: NSObject, ASWebAuthenticationPresentationContextProviding {
 
     /**
      A shared instance of Blockstack that exists for the lifetime of your app. Use this instance instead of creating your own.
@@ -54,7 +54,7 @@ public enum BlockstackConstants {
     // - MARK: Authentication
     
     /**
-     Generates an authentication request and redirects the user to the Blockstack browser to approve the sign in request.     
+     Generates an authentication request and redirects the user to the Blockstack browser to approve the sign in request.
      - parameter redirectURI: The location to which the identity provider will redirect the user after the user approves sign in.
      - parameter appDomain: The app origin.
      - parameter manifestURI: Location of the manifest file; defaults to '[appDomain]/manifest.json'.
@@ -114,6 +114,9 @@ public enum BlockstackConstants {
         
         if #available(iOS 12.0, *) {
             let authSession = ASWebAuthenticationSession(url: url, callbackURLScheme: redirectURI.absoluteString, completionHandler: completion)
+            if #available(iOS 13.0, *) {
+                authSession.presentationContextProvider = self
+            }
             authSession.start()
             self.asWebAuthSession = authSession
         } else {
@@ -121,6 +124,11 @@ public enum BlockstackConstants {
             self.sfAuthSession = SFAuthenticationSession(url: url, callbackURLScheme: redirectURI.absoluteString, completionHandler: completion)
             self.sfAuthSession?.start()
         }
+    }
+    
+    @available(iOS 12.0, *)
+    public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        return UIApplication.shared.keyWindow!
     }
     
     /**
